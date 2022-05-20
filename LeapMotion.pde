@@ -23,8 +23,6 @@ void setup() {
   size(800, 800);
   background(255);
   
-  text("PI: " + Math.PI, 0, 0);
-  
   port = new Serial(this, "COM10", 34600);
   leap = new LeapMotion(this);
 }
@@ -46,6 +44,9 @@ void draw() {
     
     float handYaw = hand.getYaw();
     float handPitch = hand.getPitch();
+    
+    text("Yaw: " + handYaw, 400, 400);
+    text("Pitch: " + handPitch, 400, 500);
     
     // tweak these things..........
     int yawMagnitude = handYaw;
