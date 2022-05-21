@@ -67,8 +67,8 @@ void draw() {
     else if (outstretchedFingers == 2)
       gear = 'B';
     
-    float xPosition = hand.getPosition().x;
-    float yPosition = hand.getPosition().y;
+    double xPosition = clamp(hand.getPosition().x, MIN_X, MAX_X);
+    double yPosition = clamp(hand.getPosition().y, MIN_Y, MAX_Y);
     
     text("X-Position: " + xPosition, 50, 400);
     text("Y-Position: " + yPosition, 50, 450);
@@ -109,6 +109,10 @@ void draw() {
     }
     
   }
+}
+
+double clamp(double value, double min, double max) {
+  return Math.max(Math.min(max, value), min);
 }
 
 double map(double number, double inputMin, double inputMax, double outputMin, double outputMax) {
