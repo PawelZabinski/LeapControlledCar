@@ -70,8 +70,8 @@ void draw() {
     float xPosition = hand.getPosition().x;
     float yPosition = hand.getPosition().y;
     
-    text("X-Position: " + xPosition, 50, 100);
-    text("Y-Position: " + yPosition, 50, 200);
+    text("X-Position: " + xPosition, 50, 400);
+    text("Y-Position: " + yPosition, 50, 450);
     
     // If position is within a range of the centre of the x axis, treat it as centre (to avoid small movements due to shaky hands)
     if (xPosition > CENTRE_X - X_OFFSET && xPosition < CENTRE_X + X_OFFSET) {
