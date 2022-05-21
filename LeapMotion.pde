@@ -22,7 +22,6 @@ double CENTRE_X = 385;
 
 double MIN_Y = 300;
 double MAX_Y = 600;
-double CENTRE_Y = 450;
 
 char gear = 'F';
 
@@ -40,7 +39,13 @@ void setup() {
 void draw() {
   background(255);
   
-  for (Hand hand : leap.getHands()) {
+  ArrayList<Hand> hands = leap.getHands();
+  
+  // If no hands are detected, immediately stop the car and reset wheel direction.
+  if (hands.size() == 0)
+    port.write("STOP");
+  
+  for (Hand hand : hands) {
     hand.draw();
     
     int outstretchedFingers = hand.getOutstretchedFingers().size();
@@ -49,6 +54,9 @@ void draw() {
     // If fish is clenched, stop the car immediately.
     if (isFistClenched) {
       port.write('S');
+      
+      // Extra info
+      text("Speed: 0", 50, 50);
       
       return;
     }
@@ -68,21 +76,34 @@ void draw() {
     // If position is within a range of the centre of the x axis, treat it as centre (to avoid small movements due to shaky hands)
     if (xPosition > CENTRE_X - X_OFFSET && xPosition < CENTRE_X + X_OFFSET) {
       port.write('s');
+      
+      // Extra info
+      text("Angle: 90", 50, 50);
     // Map the values into the range (0-180)
     } else {
       int magnitude = (int) map(xPosition, MIN_X, MAX_X, 0, 180);
       String data = String.format("D%s", magnitude);
       
+      // Extra info
+      text("Angle: " + magnitude, 50, 50);
+      
       port.write(data);
     }
       
     // If position is within a range of the centre of the x axis, treat it as centre (to avoid small movements due to shaky hands)
-    if (yPosition > CENTRE_Y - Y_OFFSET && yPosition < CENTRE_Y + Y_OFFSET) {
+    // Y Position is reversed as the closer the hand is to the leap motion sensor, the greater the value.
+    if (yPosition > MAX_Y - Y_OFFSET) {
       port.write('S');
+      
+       // Extra info
+      text("Speed: 0", 50, 100);
     // Map the values into the range (0-100)
     } else {
       int magnitude = (int) map(MAX_Y - yPosition, MIN_Y, MAX_Y, 0, 100);
       String data = String.format("%s%s", gear, magnitude);
+      
+      // Extra info
+      text("Speed: " + magnitude, 50, 100);
       
       port.write(data);
     }
