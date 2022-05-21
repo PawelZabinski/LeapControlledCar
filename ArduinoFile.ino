@@ -12,8 +12,8 @@
 // Bluetooth Serial Port
 SoftwareSerial BLTSerial(RX, TX);
 
-// Values for F and B should be within 0-100 and will be mapped to the range (155-255)
-#define MINIMUM_SPEED 155
+// Values for F and B should be within 0-100 and will be mapped to the range (50-255)
+#define MINIMUM_SPEED 100
 #define MAXIMUM_SPEED 255
 
 // Values for D should be within 0-180 and will be mapped to the range (55-125)
@@ -79,11 +79,8 @@ void loop() {
 
   if ((command == 'F' || command == 'B') && magnitude != 0)
     magnitude = map(magnitude, 1, 100, MINIMUM_SPEED, MAXIMUM_SPEED);
-  
-    
-  if (command == 'D')
+  else if (command == 'D')
     magnitude = map(magnitude, 0, 180, LEFT, RIGHT);
-    
   
   //
   // MARK: Perform the physical movement of motors
