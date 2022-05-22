@@ -25,6 +25,10 @@ double MAX_Y = 600;
 
 char gear = 'F';
 
+// Development values
+int _speed = 0;
+int _angle = 0;
+
 Serial port;
 LeapMotion leap;
 
@@ -38,6 +42,11 @@ void setup() {
 
 void draw() {
   background(255);
+  
+  // Development values
+  text("Speed: " + _speed, 50, 50);
+  text("Angle: " + _angle, 50, 100);
+  text("Gear: " + gear, 50, 150);
   
   ArrayList<Hand> hands = leap.getHands();
   
@@ -55,8 +64,8 @@ void draw() {
     if (isFistClenched) {
       port.write('S');
       
-      // Extra info
-      text("Speed: 0", 50, 50);
+      // Development values
+      _speed = 0;
       
       return;
     }
@@ -77,15 +86,15 @@ void draw() {
     if (xPosition > CENTRE_X - X_OFFSET && xPosition < CENTRE_X + X_OFFSET) {
       port.write('s');
       
-      // Extra info
-      text("Angle: 90", 50, 50);
+      // Development values
+      _angle = 90;
     // Map the values into the range (0-180)
     } else {
       int magnitude = (int) map(xPosition, MIN_X, MAX_X, 0, 180);
       String data = String.format("D%s", magnitude);
       
-      // Extra info
-      text("Angle: " + magnitude, 50, 50);
+      // Development values
+      _angle = magnitude;
       
       port.write(data);
     }
@@ -95,15 +104,15 @@ void draw() {
     if (yPosition > MAX_Y - Y_OFFSET) {
       port.write('S');
       
-       // Extra info
-      text("Speed: 0", 50, 100);
+      // Development values
+      _speed = 0;
     // Map the values into the range (0-100)
     } else {
       int magnitude = (int) map(MAX_Y - yPosition, MIN_Y, MAX_Y, 0, 100);
       String data = String.format("%s%s", gear, magnitude);
       
-      // Extra info
-      text("Speed: " + magnitude, 50, 100);
+      // Development values
+      _speed = magnitude;
       
       port.write(data);
     }
