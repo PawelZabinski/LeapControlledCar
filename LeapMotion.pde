@@ -14,8 +14,8 @@ import java.lang.Math;
 // if the hand is lowred (negative pitch value), then send a signal to move the car backwards.
 
 // Constants
-double X_OFFSET = 20;
-double Y_OFFSET = 20;
+double X_OFFSET = 50;
+double Y_OFFSET = 50;
 
 double MIN_X = 120;
 double MAX_X = 650;
@@ -45,6 +45,7 @@ void setup() {
   size(800, 800);
   background(255);
   
+  // "COM10" string identifies the port of the HC-05 bluetooth module
   port = new Serial(this, "COM10", 34600);
   leap = new LeapMotion(this);
 }
