@@ -13,6 +13,7 @@ import java.lang.Math;
 // if the hand is raised upwards (positive pitch value), then send a signal to move the car forwards.
 // if the hand is lowred (negative pitch value), then send a signal to move the car backwards.
 
+// Constants
 double X_OFFSET = 20;
 double Y_OFFSET = 20;
 
@@ -23,11 +24,19 @@ double CENTRE_X = 385;
 double MIN_Y = 300;
 double MAX_Y = 600;
 
+double MIN_ANGLE = 0;
+double MAX_ANGLE = 180;
+
+double MIN_SPEED = 0;
+double MAX_SPEED = 100;
+
 char gear = 'F';
 
-// Development values
-int _speed = 0;
-int _angle = 0;
+// GUI Values
+int speed = 0;
+int angle = 0;
+
+String END_CHAR = "\r\n";
 
 Serial port;
 LeapMotion leap;
@@ -43,18 +52,22 @@ void setup() {
 void draw() {
   background(255);
   
-  // Development values
-  text("Speed: " + _speed, 50, 50);
-  text("Angle: " + _angle, 50, 100);
-  text("Gear: " + gear, 50, 150);
+  text("Speed: " + speed, 50, 50);
+  text("Angle: " + angle, 50, 100);
+  text("Gear: " + gearName(gear), 50, 150);
   
   ArrayList<Hand> hands = leap.getHands();
   
   // If no hands are detected, immediately stop the car and reset wheel direction.
-  if (hands.size() == 0)
-    port.write("STOP");
+  int handCount = hands.size();
+  
+  if (handCount == 0)
+    port.write("STOP" + END_CHAR);
   
   for (Hand hand : hands) {
+    // Only validate movements from right hand.
+    if (!hand.isRight()) return;
+    
     hand.draw();
     
     int outstretchedFingers = hand.getOutstretchedFingers().size();
@@ -62,10 +75,9 @@ void draw() {
     
     // If fish is clenched, stop the car immediately.
     if (isFistClenched) {
-      port.write('S');
+      port.write("S" + END_CHAR);
       
-      // Development values
-      _speed = 0;
+      speed = 0;
       
       return;
     }
@@ -79,44 +91,44 @@ void draw() {
     double xPosition = clamp(hand.getPosition().x, MIN_X, MAX_X);
     double yPosition = clamp(hand.getPosition().y, MIN_Y, MAX_Y);
     
-    text("X-Position: " + xPosition, 50, 400);
-    text("Y-Position: " + yPosition, 50, 450);
-    
     // If position is within a range of the centre of the x axis, treat it as centre (to avoid small movements due to shaky hands)
     if (xPosition > CENTRE_X - X_OFFSET && xPosition < CENTRE_X + X_OFFSET) {
-      port.write('s');
+      port.write("s" + END_CHAR);
       
-      // Development values
-      _angle = 90;
+      angle = 90;
     // Map the values into the range (0-180)
     } else {
-      int magnitude = (int) map(xPosition, MIN_X, MAX_X, 0, 180);
-      String data = String.format("D%s", magnitude);
-      
-      // Development values
-      _angle = magnitude;
-      
+      int magnitude = (int) map(xPosition, MIN_X, MAX_X, MIN_ANGLE, MAX_ANGLE);
+      String data = String.format("D%s", magnitude) + END_CHAR;
+    
+      angle = magnitude;  
       port.write(data);
     }
       
     // If position is within a range of the centre of the x axis, treat it as centre (to avoid small movements due to shaky hands)
     // Y Position is reversed as the closer the hand is to the leap motion sensor, the greater the value.
     if (yPosition > MAX_Y - Y_OFFSET) {
-      port.write('S');
+      port.write("S" + END_CHAR);
       
-      // Development values
-      _speed = 0;
+      // GUI values
+      speed = 0;
     // Map the values into the range (0-100)
     } else {
-      int magnitude = (int) map(MAX_Y - yPosition, MIN_Y, MAX_Y, 0, 100);
-      String data = String.format("%s%s", gear, magnitude);
+      int magnitude = (int) (MAX_SPEED - map(yPosition, MIN_Y, MAX_Y, MIN_SPEED, MAX_SPEED));
+      String data = String.format("%s%s", gear, magnitude) + END_CHAR;
       
-      // Development values
-      _speed = magnitude;
-      
+      speed = magnitude;
       port.write(data);
     }
     
+  }
+}
+
+String gearName(char gear) {
+  switch (gear) {
+  case 'F': return "Forwards";
+  case 'B': return "Backwards";
+  default: return "None";
   }
 }
 
