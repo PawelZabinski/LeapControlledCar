@@ -7,22 +7,22 @@ import processing.serial.*;
 import de.voidplus.leapmotion.*;
 import java.lang.Math;
 
-// if the fist is clenched (0 outstretched fingers),  then send a signal to stop the car.
-// if the hand is moved towards the left (negative yaw value), then send a signal to turn the wheels to the left.
-// if the hand is moved towards the right (positive yaw value), then send a signal to turn the wheels to the right.
-// if the hand is raised upwards (positive pitch value), then send a signal to move the car forwards.
-// if the hand is lowred (negative pitch value), then send a signal to move the car backwards.
+// if the fist is clenched (0 outstretched fingers), then send a signal to toggle the gears of the car (Forward/Backward)
+// if the hand is swiped to the left (lower position x), then the angle sent to the arduino is smaller (turns car to the left)
+// if the hand is swiped to the right (higher position x), then the angle sent to the arduino is higher (turn car to the right)
+// if the hand is raised up (lower position y), then the magnitude sent (along with the direction according to the gear) increases (increased speed)
+// if the hand is lowered (higher position y), then the magnitude sent (along with the direction according to the gear) decreases (decreased speed)
 
 // Constants
-double X_OFFSET = 50;
-double Y_OFFSET = 50;
+double X_OFFSET = 30;
+double Y_OFFSET = 30;
 
-double MIN_X = 120;
-double MAX_X = 650;
-double CENTRE_X = 385;
+double MIN_X = 200;
+double MAX_X = 500;
+double CENTRE_X = (MIN_X + MAX_X) / 2;
 
 double MIN_Y = 300;
-double MAX_Y = 600;
+double MAX_Y = 500;
 
 double MIN_ANGLE = 0;
 double MAX_ANGLE = 180;
@@ -30,13 +30,14 @@ double MAX_ANGLE = 180;
 double MIN_SPEED = 0;
 double MAX_SPEED = 100;
 
-char gear = 'F';
+String END_CHAR = "\r\n";
 
-// GUI Values
+char gear = 'F';
 int speed = 0;
 int angle = 0;
 
-String END_CHAR = "\r\n";
+// Allows only one gear change per each time the fist is clenched
+boolean isGearChangeLocked = false;
 
 Serial port;
 LeapMotion leap;
@@ -45,7 +46,6 @@ void setup() {
   size(800, 800);
   background(255);
   
-  // "COM10" string identifies the port of the HC-05 bluetooth module
   port = new Serial(this, "COM10", 34600);
   leap = new LeapMotion(this);
 }
@@ -74,20 +74,19 @@ void draw() {
     int outstretchedFingers = hand.getOutstretchedFingers().size();
     boolean isFistClenched = outstretchedFingers == 0;
     
-    // If fish is clenched, stop the car immediately.
+    // If fist is clenched, and gear change is not locked, toggle the gear
     if (isFistClenched) {
-      port.write("S" + END_CHAR);
-      
-      speed = 0;
-      
-      return;
+      if (!isGearChangeLocked) {
+        if (gear == 'F')
+          gear = 'B';
+        else if (gear == 'B')
+          gear = 'F';
+        
+        isGearChangeLocked = true;
+      }
+    } else {
+      isGearChangeLocked = false;
     }
-    
-    // Change gears
-    if (outstretchedFingers == 1)
-      gear = 'F';
-    else if (outstretchedFingers == 2)
-      gear = 'B';
     
     double xPosition = clamp(hand.getPosition().x, MIN_X, MAX_X);
     double yPosition = clamp(hand.getPosition().y, MIN_Y, MAX_Y);
