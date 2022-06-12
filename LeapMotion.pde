@@ -7,7 +7,7 @@ import processing.serial.*;
 import de.voidplus.leapmotion.*;
 import java.lang.Math;
 
-// if the fist is clenched (0 outstretched fingers), then send a signal to toggle the gears of the car (Forward/Backward)
+// if the fist is clenched (0 outstretched fingers), then send a signal to toggle the gears of the car (Forward/Backward), and periodically stop the car
 // if the hand is swiped to the left (lower position x), then the angle sent to the arduino is smaller (turns car to the left)
 // if the hand is swiped to the right (higher position x), then the angle sent to the arduino is higher (turn car to the right)
 // if the hand is raised up (lower position y), then the magnitude sent (along with the direction according to the gear) increases (increased speed)
@@ -63,7 +63,7 @@ void draw() {
   int handCount = hands.size();
   
   if (handCount == 0)
-    port.write("STOP" + END_CHAR);
+    send("STOP");
   
   for (Hand hand : hands) {
     // Only validate movements from right hand.
@@ -76,6 +76,8 @@ void draw() {
     
     // If fist is clenched, and gear change is not locked, toggle the gear
     if (isFistClenched) {
+      send("S");
+      
       if (!isGearChangeLocked) {
         if (gear == 'F')
           gear = 'B';
@@ -84,7 +86,7 @@ void draw() {
         
         isGearChangeLocked = true;
       }
-    } else {
+    } else if (isGearChangeLocked) {
       isGearChangeLocked = false;
     }
     
@@ -93,32 +95,32 @@ void draw() {
     
     // If position is within a range of the centre of the x axis, treat it as centre (to avoid small movements due to shaky hands)
     if (xPosition > CENTRE_X - X_OFFSET && xPosition < CENTRE_X + X_OFFSET) {
-      port.write("s" + END_CHAR);
+      send("s");
       
       angle = 90;
     // Map the values into the range (0-180)
     } else {
       int magnitude = (int) map(xPosition, MIN_X, MAX_X, MIN_ANGLE, MAX_ANGLE);
-      String data = String.format("D%s", magnitude) + END_CHAR;
+      String data = String.format("D%s", magnitude);
     
       angle = magnitude;  
-      port.write(data);
+      send(data);
     }
       
     // If position is within a range of the centre of the x axis, treat it as centre (to avoid small movements due to shaky hands)
     // Y Position is reversed as the closer the hand is to the leap motion sensor, the greater the value.
     if (yPosition > MAX_Y - Y_OFFSET) {
-      port.write("S" + END_CHAR);
+      send("S");
       
       // GUI values
       speed = 0;
     // Map the values into the range (0-100)
     } else {
       int magnitude = (int) (MAX_SPEED - map(yPosition, MIN_Y, MAX_Y, MIN_SPEED, MAX_SPEED));
-      String data = String.format("%s%s", gear, magnitude) + END_CHAR;
+      String data = String.format("%s%s", gear, magnitude);
       
       speed = magnitude;
-      port.write(data);
+      send(data);
     }
     
   }
@@ -130,6 +132,10 @@ String gearName(char gear) {
   case 'B': return "Backwards";
   default: return "None";
   }
+}
+
+void send(String value) {
+  port.write(value + END_CHAR);
 }
 
 double clamp(double value, double min, double max) {
